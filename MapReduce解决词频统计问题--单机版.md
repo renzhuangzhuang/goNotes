@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-[TOC]
-
-=======
->>>>>>> 5a3cf31dd90a8562c1a78327d8f5040b8054afcb
 # MapReduce解决词频统计问题--单机版
 
 ## 一、文件处理
@@ -400,13 +395,9 @@ chair, looking in another direction.
 "Attendez," said Anna Pavlovna, reflecting, "I'll speak to Lise, young Bolkonski's wife, this very evening, and perhaps the thing can be arranged. It shall be on your family's behalf that I'll start my apprenticeship as old maid."
 ```
 
-文件读取方式已经确定-- 分块读取中的第四种方法。那么下面工作就是对读取到的每块数据转化成key-value结构也就是**map**过程
+文件读取方式已经确定-- 分块读取中的第四种方法。除此以外，还有一种mmap方式读取文件（已经实现，在单独一个文本中有介绍）。那么下面工作就是对读取到的每块数据转化成key-value结构也就是**map**过程
 
-<<<<<<< HEAD
 ## **二、Map过程**
-=======
-## **Map过程**
->>>>>>> 5a3cf31dd90a8562c1a78327d8f5040b8054afcb
 
 我们通过文件处理过程将得到一块一块的比特形式的数据，并将其字符化，这时我们拿到的数据就是一块字符串，我们的需求是将每一个字符写成**kv**结构，k--字符名，v--出现次数。下面介绍两种生成kv的方式
 
@@ -722,7 +713,453 @@ func main() {
 
 我感觉逻辑上没有问题，但是生成的json文件全部为空值，暂时还没有想到解决方法。。。 这块先放置在一遍
 
+**json写入后没有结果问题解决**
 
+首先上述代码在逻辑上没有问题，但是在后续调试时候发现问题：
+
+```go 
+for index, task := range ans {
+		file_name := reduceName(index)
+		files, err := os.Create(file_name)
+		if err != nil {
+			panic(err)
+		}
+		taskJson, err := json.Marshal(task) // 出问题的地方
+		if err != nil {
+			panic(err)
+		}
+		if _, err := files.Write(taskJson); err != nil {
+			panic(err)
+		}
+		if err := files.Close(); err != nil {
+			panic(err)
+		}
+	}
+```
+
+代码中标记出问题的地方所在，在进行`json.Marshal`序列化的时候即转化成二进制时，结果显示可以转化成byte流，但是当进行string转化打印时候发现问题，打印出来的都是空元素，如下所示：
+
+```go
+[91 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 44 123 125 93]
+[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
+```
+
+我们发现，其实在序列化成比特流时候就已经出错，原因在于没有正确的转化成byte流，针对这一问题，我暂时给出的解决方法就是采用第一种生成key-value的方式，并在每次读取文件转化成map时生成json文件，代码如下：
+
+```go
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"log"
+	"math"
+	"os"
+	"strconv"
+	"strings"
+)
+
+const chunksize = 1 << (10) //二进制赋值
+func reduceName(mapTask int) string {
+	return "mrtmp." + "-" + strconv.Itoa(mapTask) + ".json"
+}
+
+func main() {
+	filename := "file.txt"
+	ans := make(map[string]int)
+	fi, err := os.Stat(filename) //使用fi.size得到文件大小
+	if err != nil {
+		fmt.Println(err)
+	}
+	//fmt.Println(float64(fi.Size())) 查看大小
+	file_num := math.Ceil(float64(fi.Size()) / float64(chunksize)) // 得到文件的分块数
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	b1 := bufio.NewReader(file)
+
+	for i := 0; i < int(file_num); i++ {
+		p := make([]byte, chunksize)
+		n1, err := b1.Read(p)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ss := strings.Fields(string(p[:n1]))
+
+		for _, v := range ss {
+
+			word := strings.ToLower(v)
+			for len(word) > 0 && (word[0] < 'a' || word[0] > 'z') {
+				word = word[1:]
+			}
+			for len(word) > 0 && (word[len(word)-1] < 'a' || word[len(word)-1] > 'z') {
+				word = word[:len(word)-1]
+			}
+			ans[word]++
+		}
+		file_name := reduceName(i)
+		files, err := os.Create(file_name)
+		if err != nil {
+			panic(err)
+		}
+		taskJson, err := json.Marshal(ans)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := files.Write(taskJson); err != nil {
+			panic(err)
+		}
+		if err := files.Close(); err != nil {
+			panic(err)
+		}
+
+	}
+}
+
+```
+
+输出结果：
+
+```go 
+{"":3,"a":3,"all":2,"and":9,"anna":2,"antichrist":2,"are":2,"arrive":1,"as":2,"at":1,"being":1,"believe":1,"buonapartes":1,"but":2,"by":2,"call":1,"chapter":1,"cough":1,"days":1,"defend":1,"do":3,"don't":1,"down":1,"elite":1,"empress":1,"estates":1,"faithful":1,"family":1,"favorite":1,"fedorovna":1,"first":1,"for":1,"friend":1,"frightened":1,"from":1,"genoa":1,"golang":1,"greeted":1,"grippe":2,"had":2,"have":2,"he":1,"hello":2,"her":2,"high":1,"honor":1,"horrors":1,"how":1,"i":6,"if":2,"importance":1,"in":2,"infamies":1,"invitations":1,"is":1,"it":1,"july":1,"just":1,"kuragin":1,"la":1,"longer":2,"lucca":1,"maid":1,"man":1,"marya":1,"me":2,"means":1,"more":1,"my":2,"new":1,"news":1,"no":2,"nothing":1,"now":1,"of":4,"only":1,"pavlovna":2,"peace":2,"perpetrated":1,"petersburg":1,"prince":2,"rank":1,"really":1,"reception":1,"said":1,"scherer":1,"see":1,"she":3,"sit":1,"slave":1,"so":1,"some":1,"speaker":1,"st":1,"still":1,"suffering":1,"tell":2,"that":2,"the":8,"then":1,"these":1,"this":1,"to":3,"try":1,"used":1,"vasili":1,"volume":1,"war":3,"warn":1,"was":4,"well":1,"well-known":1,"who":1,"will":1,"with":2,"witho"...}
+```
+
+这样就可以正常保存文件了， 至于第二种方法怎么在不改动的情况下解决生成json文件问题，还没有具体的方法，近期会给出结果。
+
+## **三、reduce过程**
+
+reduce过程就是将读取到的json文件里面重新计数并排序好，最后生成一个结果文件即可。
+
+下面先给出读取json文件的代码：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+)
+
+func main() {
+	//第一步读取文件
+	inputFileName := "D://go example//go 项目//MapReduce//map_function//mrtmp.-0.json"
+	files, err := os.Open(inputFileName)
+	if err != nil {
+
+		log.Fatal(err)
+	}
+
+	dec := json.NewDecoder(files)
+	result := make(map[string]int)
+	dec.Decode(&result)
+	fmt.Println(result)
+
+}
+```
+
+输出：
+
+```go
+map[:3 a:3 all:2 and:9 anna:2 antichrist:2 are:2 arrive:1 as:2 at:1 being:1 believe:1 buonapartes:1 but:2 by:2 call:1 chapter:1 cough:1 days:1 defend:1 do:3 don't:1 down:1 elite:1 empress:1 estates:1 faithful:1 family:1 favorite:1 fedorovna:1 first:1 for:1 friend:1 frightened:1 from:1 genoa:1 golang:1 greeted:1 grippe:2 had:2 have:2 he:1 hello:2 her:2 high:1 honor:1 horrors:1 how:1 i:6 if:2 importance:1 in:2 infamies:1 invitations:1 is:1 it:1 july:1 just:1 kuragin:1 la:1 longer:2 lucca:1 maid:1 man:1 marya:1 me:2 means:1 more:1 my:2 new:1 news:1 no:2 nothing:1 now:1 of:4 only:1 pavlovna:2 peace:2 perpetrated:1 petersburg:1 prince:2 rank:1 really:1 reception:1 said:1 scherer:1 see:1 she:3 sit:1 slave:1 so:1 some:1 speaker:1 st:1 still:1 suffering:1 tell:2 that:2 the:8 then:1 these:1 this:1 to:3 try:1 used:1 vasili:1 volume:1 war:3 warn:1 was:4 well:1 well-known:1 who:1 will:1 with:2 witho:1 word:1 words:1 world:1 you:8 yourself:1]
+```
+
+根据上述结果我们可以顺利的将json文件数据读出，
+
+下面要做的工作就是将json文件读取，进行计数排序，下面给出计数排序的代码：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"os"
+	"sort"
+	"strconv"
+)
+
+func main() {
+	//第一步读取文件
+	inputFileName := "D://go example//go 项目//MapReduce//map_function//mrtmp.-0.json"
+	files, err := os.Open(inputFileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dec := json.NewDecoder(files)
+	result := make(map[string]int)
+	dec.Decode(&result)
+	// 第二步 进行计数
+	ans := make(map[string]int)
+	for k, v := range result {
+		ans[k] += v
+	}
+	// 第三部进行排序
+	sortmap := []string{}
+	for k := range ans {
+		sortmap = append(sortmap, k)
+	}
+	sort.Strings(sortmap)
+
+	//fmt.Println(sortmap)
+	//保存结果
+	final_result, err := os.Create("result.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer final_result.Close()
+
+	for _, v := range sortmap {
+		final_result.WriteString(v + ":" + strconv.Itoa(ans[v]) + "\n")
+	}
+
+}
+```
+
+上述代码给出了完整的从读取文件到计数排序最后生成结果文件。 我们可以看下最后结果
+
+```txt
+:3
+a:3
+all:2
+and:9
+anna:2
+antichrist:2
+are:2
+arrive:1
+as:2
+at:1
+being:1
+believe:1
+buonapartes:1
+but:2
+by:2
+...
+```
+
+接着实现读取所有文件并保存结果，整体思路是一致，剩余的就是解决一个读取文件的问题。
+
+代码如下：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"sort"
+	"strconv"
+)
+
+func reduceName(mapTask int) string {
+	return "mrtmp." + "-" + strconv.Itoa(mapTask) + ".json"
+}
+func main() {
+	//第一步读取文件
+	inputFileName := make([]*os.File, 12) // 这里后续都要改成 具体的任务数
+	for i := 0; i < 12; i++ {
+		file_name := reduceName(i)
+		fmt.Println(file_name)
+		inputFileName[i], _ = os.Open("D://go example//go 项目//MapReduce//map_function//" + file_name)
+	}
+    //第二步保存文件
+	ans := make(map[string]int)
+	for _, files := range inputFileName {
+		result := make(map[string]int)
+		dec := json.NewDecoder(files)
+		dec.Decode(&result)
+		for k, v := range result {
+			ans[k] += v
+		}
+	}
+	// 第三部进行排序
+	sortmap := []string{}
+	for k := range ans {
+		sortmap = append(sortmap, k)
+	}
+	sort.Strings(sortmap)
+	//保存结果
+	final_result, err := os.Create("result.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer final_result.Close()
+
+	for _, v := range sortmap {
+		final_result.WriteString(v + ":" + strconv.Itoa(ans[v]) + "\n")
+	}
+}
+
+```
+
+最后结果保存在`result.txt`文件
+
+到这为止一个简单的单机MapReuce的几个主要功能基本都实现了，下面将借助`goroutinue`、`资源池`、`一致性hash`
+
+等手段进一步提高单机MapReuce性能
+
+## 完整的简单单机MapReduce实现
+
+代码如下：
+
+```go
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"log"
+	"math"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+)
+
+func doMap(
+	chunksize int, //缓存大小
+	filename string, // 文件名称
+	nReduceTask int, //reduce任务数，块数
+	ans map[string]int, // 保存中间存放k-v
+	wg *sync.WaitGroup,
+
+) {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	b1 := bufio.NewReader(file)
+	for i := 0; i < nReduceTask; i++ {
+		p := make([]byte, chunksize)
+		n1, err := b1.Read(p)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ss := strings.Fields(string(p[:n1]))
+		for _, v := range ss {
+			word := strings.ToLower(v)
+			for len(word) > 0 && (word[0] < 'a' || word[0] > 'z') {
+				word = word[1:]
+			}
+			for len(word) > 0 && (word[len(word)-1] < 'a' || word[len(word)-1] > 'z') {
+				word = word[:len(word)-1]
+			}
+			ans[word]++
+		}
+		file_name := ReduceName(i)
+		files, err := os.Create(file_name)
+		if err != nil {
+			panic(err)
+		}
+		taskJson, err := json.Marshal(ans)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := files.Write(taskJson); err != nil {
+			panic(err)
+		}
+		if err := files.Close(); err != nil {
+			panic(err)
+		}
+
+	}
+	defer wg.Done()
+
+}
+func ReduceName(mapTask int) string {
+	return "mrtmp." + "-" + strconv.Itoa(mapTask) + ".json"
+}
+
+func doReduce(
+	filename string,
+	result chan map[string]int,
+	wg *sync.WaitGroup,
+) {
+	files, _ := os.Open(filename)
+	ans := make(map[string]int)
+	ans1 := make(map[string]int)
+	dec := json.NewDecoder(files)
+	dec.Decode(&ans)
+	for k, v := range ans {
+		ans1[k] += v
+	}
+	result <- ans1
+	defer wg.Done()
+}
+
+const chunksize = 1 << (10) //二进制赋值
+
+func main() {
+	var wg sync.WaitGroup
+	var wg1 sync.WaitGroup
+	filename := "D:\\go example\\go 项目\\MapReduce\\map_function\\file.txt"
+	ans := make(map[string]int)
+	fi, err := os.Stat(filename) //使用fi.size得到文件大小
+	if err != nil {
+		fmt.Println(err)
+	}
+	//fmt.Println(float64(fi.Size())) 查看大小
+	file_num := math.Ceil(float64(fi.Size()) / float64(chunksize))
+	nReduceTask := file_num
+	wg.Add(1)
+	go doMap(chunksize, filename, int(nReduceTask), ans, &wg)
+
+	result := make([]chan map[string]int, int(nReduceTask))
+	for i := 0; i < int(nReduceTask); i++ {
+		result[i] = make(chan map[string]int, 10000)
+	}
+	for i := 0; i < int(nReduceTask); i++ {
+		wg1.Add(1)
+		file_name := ReduceName(i)
+		file_name = "D://go example//go 项目//MapReduce//map_function//" + file_name
+		go doReduce(file_name, result[i], &wg1)
+	}
+	wg.Wait()
+	wg1.Wait()
+	result_all := make(map[string]int)
+	for _, v := range result {
+		for k, value := range <-v {
+			result_all[k] += value
+		}
+		if len(v) == 0 {
+			close(v)
+		}
+	}
+	sortmap := []string{}
+	for k := range result_all {
+		sortmap = append(sortmap, k)
+	}
+	sort.Strings(sortmap)
+	//保存结果
+	final_result, err := os.Create("result.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer final_result.Close()
+
+	for _, v := range sortmap {
+		final_result.WriteString(v + ":" + strconv.Itoa(result_all[v]) + "\n")
+	}
+}
+
+```
+
+这里面还是相对简单只加入了goroutinue还没有引入shuffle过程，在后面的多机练习中会陆续加入。
+
+结果全部放入github上
+
+链接：[renzhuangzhuang (github.com)](https://github.com/renzhuangzhuang)
 
 
 
